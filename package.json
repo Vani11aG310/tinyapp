@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Vani11aG310/tinyapp/issues"
   },
-  "homepage": "https://github.com/Vani11aG310/tinyapp#readme"
+  "homepage": "https://github.com/Vani11aG310/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
 }
