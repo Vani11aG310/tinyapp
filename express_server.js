@@ -26,9 +26,15 @@ app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
+
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
+});
+
+app.post('/login', (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect('/urls');
 });
 
 app.post('/urls', (req, res) => {
