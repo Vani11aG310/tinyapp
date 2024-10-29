@@ -4,7 +4,7 @@ const PORT = 8080;
 const cookieParser = require('cookie-parser');
 // set up middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser(null, cookieParser.JSONCookie('username')));
+app.use(cookieParser());
 
 
 // set view engine
