@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 const PORT = 8080;
+// set up middleware
+app.use(express.urlencoded({ extended: true }));
+
 // set view engine
 app.set('view engine', 'ejs');
 
@@ -9,6 +12,15 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+function generateRandomString(length) {
+  let string = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (const counter = 0; counter < length; counter++) {
+    string += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return string;
+}
+
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -16,6 +28,15 @@ app.get('/', (req, res) => {
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
+});
+
+app.post('/urls', (req, res) => {
+  console.log(req.body);
+  res.send('Ok');
+});
+
+app.get('/urls/new', (req, res) => {
+  res.render('urls_new');
 });
 
 app.get('/urls/:id', (req, res) => {
