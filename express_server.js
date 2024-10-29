@@ -40,6 +40,11 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
+app.post('/logout', (req, res) => {
+  res.clearCookie("username");
+  res.redirect('/urls');
+})
+
 app.post('/urls', (req, res) => {
   const newKey = generateRandomString();
   urlDatabase[newKey] = req.body.longURL;
