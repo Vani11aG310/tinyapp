@@ -12,10 +12,11 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
-function generateRandomString(length) {
+function generateRandomString() {
   let string = '';
+  const length = 6;
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (const counter = 0; counter < length; counter++) {
+  for (let counter = 0; counter < length; counter++) {
     string += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return string;
@@ -31,9 +32,15 @@ app.get('/urls', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  console.log(req.body);
-  res.send('Ok');
+  const newKey = generateRandomString();
+  urlDatabase[newKey] = req.body.longURL;
+  res.redirect(`/urls/${newKey}`);
 });
+
+app.get('/u/:id', (req, res) => {
+  const longURL = urlDatabase[req.params.id]
+  res.redirect(longURL);
+})
 
 app.get('/urls/new', (req, res) => {
   res.render('urls_new');
