@@ -43,7 +43,11 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   res.clearCookie("username");
   res.redirect('/urls');
-})
+});
+
+app.get('/register', (req, res) => {
+  res.render('register');
+});
 
 app.post('/urls', (req, res) => {
   const newKey = generateRandomString();
@@ -52,12 +56,12 @@ app.post('/urls', (req, res) => {
 });
 
 app.get('/u/:id', (req, res) => {
-  const longURL = urlDatabase[req.params.id]
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
-})
+});
 
 app.get('/urls/new', (req, res) => {
-  const templateVars = { username: req.cookies["username"] }
+  const templateVars = { username: req.cookies["username"] };
   res.render('urls_new', templateVars);
 });
 
@@ -68,13 +72,13 @@ app.get('/urls/:id', (req, res) => {
 
 app.post('/urls/:id', (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect('/urls')
+  res.redirect('/urls');
 });
 
 app.post('/urls/:id/delete', (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
-})
+});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
