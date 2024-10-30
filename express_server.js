@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
+const { restart } = require('nodemon');
 // set up middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -45,17 +46,38 @@ app.get('/', (req, res) => {
 
 
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  const templateVars = { urls: urlDatabase, user: users[req.cookies["user_id"]] };
   res.render('urls_index', templateVars);
 });
 
 app.post('/login', (req, res) => {
-  res.cookie("username", req.body.username);
+  // check users for existing user
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).send('Please provide an email AND a password');
+  }
+
+  let foundUser = null;
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      foundUser = user;
+    }
+  }
+
+  if (!foundUser) {
+    res.status(400).send('User with that email does not exist');
+  }
+
+
+  res.cookie("user_id", foundUser.id);
   res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect('/urls');
 });
 
@@ -76,7 +98,7 @@ app.post('/register', (req, res) => {
   let foundUser = null;
 
   for (const userId in users) {
-    const user = users[userId]
+    const user = users[userId];
     if (user.email === email) {
       foundUser = user;
     }
@@ -89,8 +111,6 @@ app.post('/register', (req, res) => {
   users[userId] = { id: userId, email, password };
 
   res.cookie('user_id', userId);
-
-  console.log(users);
 
   res.redirect('urls');
 
@@ -108,12 +128,12 @@ app.get('/u/:id', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const templateVars = { user: users[req.cookies["user_id"]] };
   res.render('urls_new', templateVars);
 });
 
 app.get('/urls/:id', (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies["user_id"]] };
   res.render('urls_show', templateVars);
 });
 
