@@ -51,7 +51,8 @@ app.get('/urls', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.render('login');
+  const templateVars = { user: users[req.cookies['user_id']]}
+  res.render('login', templateVars);
 })
 
 app.post('/login', (req, res) => {
@@ -67,6 +68,9 @@ app.post('/login', (req, res) => {
   for (const userId in users) {
     const user = users[userId];
     if (user.email === email) {
+      if (user.password !== password) {
+        return res.status(403).send('Please enter a valid email or password')
+      }
       foundUser = user;
     }
   }
@@ -82,11 +86,12 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   res.clearCookie("user_id");
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.get('/register', (req, res) => {
-  res.render('register');
+  const templateVars = { user: users[req.cookies['user_id']]}
+  res.render('register', templateVars);
 });
 
 app.post('/register', (req, res) => {
