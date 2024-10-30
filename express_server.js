@@ -10,9 +10,23 @@ app.use(cookieParser());
 // set view engine
 app.set('view engine', 'ejs');
 
+// Application databases
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
+};
+
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "a@a.com",
+    password: "1234",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "b@b.com",
+    password: "5678",
+  },
 };
 
 function generateRandomString() {
@@ -47,6 +61,39 @@ app.post('/logout', (req, res) => {
 
 app.get('/register', (req, res) => {
   res.render('register');
+});
+
+app.post('/register', (req, res) => {
+  const userId = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).send('Please provide an email AND a password');
+  }
+
+  // check for existing user
+  let foundUser = null;
+
+  for (const userId in users) {
+    const user = users[userId]
+    if (user.email === email) {
+      foundUser = user;
+    }
+  }
+
+  if (foundUser) {
+    return res.status(400).send('User with that email already exists');
+  }
+
+  users[userId] = { id: userId, email, password };
+
+  res.cookie('user_id', userId);
+
+  console.log(users);
+
+  res.redirect('urls');
+
 });
 
 app.post('/urls', (req, res) => {
