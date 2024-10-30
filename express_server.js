@@ -40,6 +40,17 @@ function generateRandomString() {
   return string;
 }
 
+function findUserByEmail(email) {
+  let foundUser = null;
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      foundUser = user;
+    }
+  }
+  return foundUser;
+}
+
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -64,23 +75,20 @@ app.post('/login', (req, res) => {
     return res.status(400).send('Please provide an email AND a password');
   }
 
-  let foundUser = null;
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      if (user.password !== password) {
-        return res.status(403).send('Please enter a valid email or password')
-      }
-      foundUser = user;
+  let user = null;
+
+  if (findUserByEmail(email)) {
+    if (password === findUserByEmail(email).password){
+      user = findUserByEmail(email);
     }
   }
 
-  if (!foundUser) {
+  if (!user) {
     return res.status(400).send('User with that email does not exist');
   }
 
 
-  res.cookie("user_id", foundUser.id);
+  res.cookie("user_id", user.id);
   res.redirect('/urls');
 });
 
@@ -104,21 +112,13 @@ app.post('/register', (req, res) => {
   }
 
   // check for existing user
-  let foundUser = null;
 
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      foundUser = user;
-    }
-  }
-
-  if (foundUser) {
+  if (findUserByEmail(email)) {
     return res.status(400).send('User with that email already exists');
   }
 
   users[userId] = { id: userId, email, password };
-
+  
   res.cookie('user_id', userId);
 
   res.redirect('urls');
