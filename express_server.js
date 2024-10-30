@@ -50,6 +50,10 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
+app.get('/login', (req, res) => {
+  res.render('login');
+})
+
 app.post('/login', (req, res) => {
   // check users for existing user
   const email = req.body.email;
@@ -68,7 +72,7 @@ app.post('/login', (req, res) => {
   }
 
   if (!foundUser) {
-    res.status(400).send('User with that email does not exist');
+    return res.status(400).send('User with that email does not exist');
   }
 
 
