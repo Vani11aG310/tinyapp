@@ -8,4 +8,16 @@ function findUserByEmail(email, database) {
   return null;
 }
 
-module.exports = { findUserByEmail };
+function urlsForUser(id, database) {
+  const userURLs = {};
+
+  for (const urlKey in database) {
+    if (database[urlKey].userID === id) {
+      userURLs[urlKey] = database[urlKey];
+    }
+  }
+
+  return userURLs;
+}
+
+module.exports = { findUserByEmail, urlsForUser };

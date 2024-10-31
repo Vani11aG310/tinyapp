@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080;
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const { findUserByEmail } = require('./helpers');
+const { findUserByEmail, urlsForUser } = require('./helpers');
 
 // set up middleware
 app.use(express.urlencoded({ extended: true }));
@@ -43,24 +43,19 @@ function generateRandomString() {
   return string;
 }
 
-function urlsForUser(id) {
-  const userURLs = {};
-
-  for (const urlKey in urlDatabase) {
-    if (urlDatabase[urlKey].userID === id) {
-      userURLs[urlKey] = urlDatabase[urlKey];
-    }
+app.get('/', (req, res) => { 
+  if (!req.session.user_id) {
+    return res.redirect('/login');
   }
-
-  return userURLs;
-}
+  res.redirect('/urls');
+})
 
 app.get('/urls', (req, res) => {
   if (!req.session.user_id) {
     return res.send('You must be logged in to see your short URLs');
   }
 
-  const urls = urlsForUser(req.session.user_id)
+  const urls = urlsForUser(req.session.user_id, urlDatabase)
 
   const templateVars = { urls, user: users[req.session.user_id] };
   res.render('urls_index', templateVars);
@@ -85,9 +80,11 @@ app.post('/login', (req, res) => {
 
   let user = null;
 
-  if (findUserByEmail(email, users)) {
-    if (bcrypt.compareSync(password, findUserByEmail(email, users).password)) {
-      user = findUserByEmail(email, users);
+  const foundUser = findUserByEmail(email, users);
+
+  if (foundUser) {
+    if (bcrypt.compareSync(password, foundUser.password)) {
+      user = foundUser;
     }
   }
 
@@ -124,11 +121,15 @@ app.post('/register', (req, res) => {
 
   // check for existing user
 
-  if (findUserByEmail(email, users)) {
+  const foundUser = findUserByEmail(email, users);
+
+  if (foundUser) {
     return res.status(400).send('User with that email already exists');
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const salt = bcrypt.genSaltSync(10)
+
+  const hashedPassword = bcrypt.hashSync(password, salt);
 
   users[userId] = { id: userId, email, password: hashedPassword };
 
@@ -164,13 +165,18 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/urls/:id', (req, res) => {
+  if (!Object.keys(urlDatabase).includes(req.params.id)) {
+    return res.status(400).send('That shortURL does not exist');
+  }
+  
   if (!req.session.user_id) {
     return res.send('You must be logged in to see your shortURL')
   }
 
   if (urlDatabase[req.params.id].userID !== req.session.user_id) {
-    res.status(401).send('You are not authorized to view this shortURL');
+    return res.status(401).send('You are not authorized to view this shortURL');
   }
+  
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.user_id] };
   res.render('urls_show', templateVars);
 });
