@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
-const { restart } = require('nodemon');
+
 // set up middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -160,7 +160,6 @@ app.post('/urls', (req, res) => {
     return res.send('Cannot shorten URLs becasue you are not logged in.')
   }
   const newKey = generateRandomString();
-  console.log(req.cookies['user_id'])
   urlDatabase[newKey] = { longURL: req.body.longURL, userID: req.cookies['user_id']};
   res.redirect(`/urls/${newKey}`);
 });
