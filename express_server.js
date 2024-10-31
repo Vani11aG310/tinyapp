@@ -186,7 +186,7 @@ app.get('/urls/:id', (req, res) => {
     return res.send('You must be logged in to see your shortURL')
   }
 
-  if (!urlDatabase[req.params.id].userID === req.cookies['user_id']) {
+  if (urlDatabase[req.params.id].userID !== req.cookies['user_id']) {
     res.status(401).send('You are not authorized to view this shortURL');
   }
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies["user_id"]] };
