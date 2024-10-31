@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080;
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const { findUserByEmail } = require('./helpers');
 
 // set up middleware
 app.use(express.urlencoded({ extended: true }));
@@ -40,17 +41,6 @@ function generateRandomString() {
     string += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return string;
-}
-
-function findUserByEmail(email) {
-  let foundUser = null;
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      return foundUser = user;
-    }
-  }
-  return foundUser;
 }
 
 function urlsForUser(id) {
@@ -95,9 +85,9 @@ app.post('/login', (req, res) => {
 
   let user = null;
 
-  if (findUserByEmail(email)) {
-    if (bcrypt.compareSync(password, findUserByEmail(email).password)) {
-      user = findUserByEmail(email);
+  if (findUserByEmail(email, users)) {
+    if (bcrypt.compareSync(password, findUserByEmail(email, users).password)) {
+      user = findUserByEmail(email, users);
     }
   }
 
@@ -134,7 +124,7 @@ app.post('/register', (req, res) => {
 
   // check for existing user
 
-  if (findUserByEmail(email)) {
+  if (findUserByEmail(email, users)) {
     return res.status(400).send('User with that email already exists');
   }
 
