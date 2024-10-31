@@ -65,11 +65,6 @@ function urlsForUser(id) {
   return userURLs;
 }
 
-app.get('/', (req, res) => {
-  res.send('Hello!');
-});
-
-
 app.get('/urls', (req, res) => {
   if (!req.session.user_id) {
     return res.send('You must be logged in to see your short URLs');
@@ -111,7 +106,7 @@ app.post('/login', (req, res) => {
   }
 
 
-  res.session.user_id = user.id;
+  req.session.user_id = user.id;
   res.redirect('/urls');
 });
 
@@ -163,7 +158,7 @@ app.post('/urls', (req, res) => {
 });
 
 app.get('/u/:id', (req, res) => {
-  if (!Object.keys(urlDatabase).includes(req.params.id)) {
+  if (!urlDatabase.hasOwnProperty(req.params.id)) {
     return res.send("That shortURL does not exist");
   }
   const longURL = urlDatabase[req.params.id].longURL;
@@ -210,14 +205,6 @@ app.post('/urls/:id/delete', (req, res) => {
   }
   delete urlDatabase[req.params.id];
   res.redirect('/urls');
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.listen(PORT, () => {
