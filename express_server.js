@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 // set up middleware
 app.use(express.urlencoded({ extended: true }));
@@ -23,18 +24,7 @@ const urlDatabase = {
   },
 };
 
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "a@a.com",
-    password: "1234",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "b@b.com",
-    password: "5678",
-  },
-};
+const users = {};
 
 function generateRandomString() {
   let string = '';
@@ -105,7 +95,7 @@ app.post('/login', (req, res) => {
   let user = null;
 
   if (findUserByEmail(email)) {
-    if (password === findUserByEmail(email).password) {
+    if (bcrypt.compareSync(password, findUserByEmail(email).password)) {
       user = findUserByEmail(email);
     }
   }
@@ -147,7 +137,9 @@ app.post('/register', (req, res) => {
     return res.status(400).send('User with that email already exists');
   }
 
-  users[userId] = { id: userId, email, password };
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  users[userId] = { id: userId, email, password: hashedPassword };
 
   res.cookie('user_id', userId);
 
