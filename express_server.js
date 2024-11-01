@@ -33,7 +33,7 @@ const urlDatabase = {
 
 const users = {};
 
-function generateRandomString() {
+const generateRandomString = () => {
   let string = '';
   const length = 6;
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -41,34 +41,37 @@ function generateRandomString() {
     string += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return string;
-}
+};
 
-app.get('/', (req, res) => { 
-  if (!req.session.user_id) {
+app.get('/', (req, res) => {
+  if (!req.session.userId) {
     return res.redirect('/login');
   }
   res.redirect('/urls');
-})
+});
 
+// renders list of shortURLs based on userID
 app.get('/urls', (req, res) => {
-  if (!req.session.user_id) {
+  if (!req.session.userId) {
     return res.send('You must be logged in to see your short URLs');
   }
 
-  const urls = urlsForUser(req.session.user_id, urlDatabase)
+  const urls = urlsForUser(req.session.userId, urlDatabase);
 
-  const templateVars = { urls, user: users[req.session.user_id] };
+  const templateVars = { urls, user: users[req.session.userId] };
   res.render('urls_index', templateVars);
 });
 
+// renders login page
 app.get('/login', (req, res) => {
-  if (req.session.user_id) {
+  if (req.session.userId) {
     return res.redirect('/urls');
   }
-  const templateVars = { user: users[req.session.user_id] };
+  const templateVars = { user: users[req.session.userId] };
   res.render('login', templateVars);
 });
 
+// runs login checks to login the user based on their input
 app.post('/login', (req, res) => {
   // check users for existing user
   const email = req.body.email;
@@ -93,7 +96,7 @@ app.post('/login', (req, res) => {
   }
 
 
-  req.session.user_id = user.id;
+  req.session.userId = user.id;
   res.redirect('/urls');
 });
 
@@ -102,14 +105,16 @@ app.post('/logout', (req, res) => {
   res.redirect('/login');
 });
 
+// renders register page
 app.get('/register', (req, res) => {
-  if (req.session.user_id) {
+  if (req.session.userId) {
     return res.redirect('/urls');
   }
-  const templateVars = { user: users[req.session.user_id] };
+  const templateVars = { user: users[req.session.userId] };
   res.render('register', templateVars);
 });
 
+// Adds user to the database upon registration
 app.post('/register', (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
@@ -127,62 +132,67 @@ app.post('/register', (req, res) => {
     return res.status(400).send('User with that email already exists');
   }
 
-  const salt = bcrypt.genSaltSync(10)
+  const salt = bcrypt.genSaltSync(10);
 
   const hashedPassword = bcrypt.hashSync(password, salt);
 
   users[userId] = { id: userId, email, password: hashedPassword };
 
-  req.session.user_id = userId;
+  req.session.userId = userId;
 
   res.redirect('/urls');
 
 });
 
+// Route to add a shortURL to the database
 app.post('/urls', (req, res) => {
-  if (!req.session.user_id) {
-    return res.send('Cannot shorten URLs becasue you are not logged in.')
+  if (!req.session.userId) {
+    return res.send('Cannot shorten URLs becasue you are not logged in.');
   }
   const newKey = generateRandomString();
-  urlDatabase[newKey] = { longURL: req.body.longURL, userID: req.session.user_id};
+  urlDatabase[newKey] = { longURL: req.body.longURL, userID: req.session.userId };
   res.redirect(`/urls/${newKey}`);
 });
 
+// Route to redirect shortURL to the longURL
 app.get('/u/:id', (req, res) => {
-  if (!urlDatabase.hasOwnProperty(req.params.id)) {
+  if (!Object.keys(urlDatabase).includes(req.params.id)) {
     return res.send("That shortURL does not exist");
   }
   const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
 
+// Renders new shortURL creation page
 app.get('/urls/new', (req, res) => {
-  if (!req.session.user_id) {
+  if (!req.session.userId) {
     return res.redirect('/login');
   }
-  const templateVars = { user: users[req.session.user_id] };
+  const templateVars = { user: users[req.session.userId] };
   res.render('urls_new', templateVars);
 });
 
+// Renders page displaying a user's specific shortURL
 app.get('/urls/:id', (req, res) => {
   if (!Object.keys(urlDatabase).includes(req.params.id)) {
     return res.status(400).send('That shortURL does not exist');
   }
-  
-  if (!req.session.user_id) {
-    return res.send('You must be logged in to see your shortURL')
+
+  if (!req.session.userId) {
+    return res.send('You must be logged in to see your shortURL');
   }
 
-  if (urlDatabase[req.params.id].userID !== req.session.user_id) {
+  if (urlDatabase[req.params.id].userID !== req.session.userId) {
     return res.status(401).send('You are not authorized to view this shortURL');
   }
-  
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.user_id] };
+
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userId] };
   res.render('urls_show', templateVars);
 });
 
+// Route to update specific shortURL
 app.post('/urls/:id', (req, res) => {
-  if (req.session.user_id !== urlDatabase[req.params.id].userID || !req.session.user_id) {
+  if (req.session.userId !== urlDatabase[req.params.id].userID || !req.session.userId) {
     return res.status(401).send('You are not authorized to make changes to this shortURL');
   }
   if (!urlDatabase[req.params.id]) {
@@ -192,8 +202,9 @@ app.post('/urls/:id', (req, res) => {
   res.redirect('/urls');
 });
 
+// Delete a shortURL
 app.post('/urls/:id/delete', (req, res) => {
-  if (req.session.user_id !== urlDatabase[req.params.id].userID || !req.session.user_id) {
+  if (req.session.userId !== urlDatabase[req.params.id].userID || !req.session.userId) {
     return res.status(401).send('You are not authorized to make changes to this shortURL');
   }
   if (!urlDatabase[req.params.id]) {

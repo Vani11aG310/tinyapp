@@ -1,4 +1,4 @@
-function findUserByEmail(email, database) {
+const findUserByEmail = (email, database) => {
   for (const userId in database) {
     const user = database[userId];
     if (user.email === email) {
@@ -6,9 +6,9 @@ function findUserByEmail(email, database) {
     }
   }
   return null;
-}
+};
 
-function urlsForUser(id, database) {
+const urlsForUser = (id, database) => {
   const userURLs = {};
 
   for (const urlKey in database) {
@@ -16,8 +16,7 @@ function urlsForUser(id, database) {
       userURLs[urlKey] = database[urlKey];
     }
   }
-
   return userURLs;
-}
+};
 
 module.exports = { findUserByEmail, urlsForUser };
